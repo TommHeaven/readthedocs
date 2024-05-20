@@ -157,7 +157,7 @@ chmod 777 boot.sh
 
 结果如下：
 
-![result](.\picture\pic1.png)
+![result](D:\Work_Files\Linux驱动开发\Rust技术文档\picture\pic1.png)
 
 附：感兴趣的可以尝试下启动树莓派4B，执行命令如下：
 
@@ -193,7 +193,7 @@ sudo umount 2024-03-12-raspios-bookworm-arm64-lite.img rootfs
 
 驱动加载演示如下所示
 
-![result2](.\picture\pic2.png)
+![result2](D:\Work_Files\Linux驱动开发\Rust技术文档\picture\pic2.png)
 
 以上就是通过QEMU的树莓派模拟环境去进行驱动开发的过程。
 
