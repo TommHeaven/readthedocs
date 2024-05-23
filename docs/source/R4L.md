@@ -241,3 +241,23 @@ sudo nmcli c down 'Wired connection 1' && sudo nmcli c up 'Wired connection 1'
 
 
 ### 练习一： 根据上面的方法配置环境，编写和加载HelloWorld的驱动模块。完成后截图。
+
+### 练习二： 实现`Miscdev`驱动基本读写
+- 远端仓库(https://github.com/happy-thw/linux_raspberrypi/commit/ca5198f6449b4076f3a48df9c9a7e71460977cab)更新了练习二的内容，添加了一个samples/rust/rust_miscdev.rs文件，但是没有绑定驱动；
+- 按要求添加配置项，补充内容，使得杂项字符设备可以实现基本读写操作。
+- 提示：里面缺少到miscdev抽象文件可以从rust for linux社区rust分支获取。
+- 测试样例：
+```
+//! How to build only modules:
+//! make LLVM=-17 O=build_4b ARCH=arm64 M=samples/rust
+//!
+//! How to use in qemu:
+//! / # sudo insmod rust_miscdev.ko
+//! / # sudo cat /proc/misc  -> c 10 122
+//! / # sudo chmod 777 /dev/rust_misc
+//! / # sudo echo "hello" > /dev/rust_misc
+//! / # sudo cat /dev/rust_misc  -> Hello
+//!
+``` 
+- 测试结果如图：  
+![result](../source/picture/pic3.png)
