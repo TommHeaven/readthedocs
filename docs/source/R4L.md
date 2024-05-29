@@ -243,7 +243,7 @@ sudo nmcli c down 'Wired connection 1' && sudo nmcli c up 'Wired connection 1'
 ### 练习一： 根据上面的方法配置环境，编写和加载HelloWorld的驱动模块。完成后截图。
 
 ### 练习二： 实现`Miscdev`驱动基本读写
-- 远端仓库(https://github.com/happy-thw/linux_raspberrypi/commit/ca5198f6449b4076f3a48df9c9a7e71460977cab)更新了练习二的内容，添加了一个samples/rust/rust_miscdev.rs文件，但是没有绑定驱动；
+- 远端仓库 [代码仓库](https://github.com/happy-thw/linux_raspberrypi/commit/ca5198f6449b4076f3a48df9c9a7e71460977cab) 更新了练习二的内容，添加了一个samples/rust/rust_miscdev.rs文件，但是没有绑定驱动;
 - 按要求添加配置项，补充内容，使得杂项字符设备可以实现基本读写操作。
 - 提示：里面缺少到miscdev抽象文件可以从rust for linux社区rust分支获取。
 - 测试样例：
@@ -261,3 +261,58 @@ sudo nmcli c down 'Wired connection 1' && sudo nmcli c up 'Wired connection 1'
 ``` 
 - 测试结果如图：  
 ![result](../source/picture/pic3.png)
+
+### 练习三： 跨内核驱动框架下的树莓派4B GPIO点灯实现
+- 远端仓库 [代码仓库-练习三](https://github.com/happy-thw/linux_raspberrypi/commit/61785d5672d7006391cf589fd75774eb22381627) 更新了练习三的内容，添加了一个drivers/gpio/exercise-3-gpio目录,包括C语言的树莓派4B点灯的参考代码，以及通过Cargo new的一个跨内核驱动框架Adapter driver的目录，里面提供了练习作业的相关说明;
+- 参考代码链接: [DesignWare_APB_GPIO Adapter Driver模块](https://github.com/happy-thw/gpio-dw-linux-adapter) 以及 [DesignWare_APB_GPIO Pure Driver模块](https://github.com/happy-thw/gpio-dw-linux-adapter),参考drivers/gpio/gpio-dwapb.c的C代码实现
+- 注意事项：  
+    1. 只支持驱动模块build-in，无法基于Cargo生成.ko文件
+    2. 编译跨内核的驱动时，无法使用多线程并行编译（不能make -jx）,由于Cargo的依赖重定位问题导致(建议先编译内核，然后修改跨内核的驱动配置项，单线程编译）
+    3. 需要在rust/cargo_driver/Cargo.toml中添加adapter层的dependencies,例如：
+        ```
+        [dependencies]
+        gpio_rpbled_linux_adapt  = { path = "../../drivers/gpio/exercise-3-gpio/gpio-rpbled-adapter"}
+        ```
+        以及Rust/makefile 476行中增加binaries，adapter层Crate的name（可在改配置后面追加）
+        ```
+        # When adding a cargo project, you must add the binaries
+        # that need to be excluded here. 
+        # They will be removed when the cargo_driver is actually generated.
+        CARGO_EXCLUDE_OBJ := gpio_rpbled_linux_adapt
+        ```
+- 在树莓派中运行Arceos:
+    1. 克隆这个仓库,生成ArceOS代码仓库：https://github.com/chenlongos/arceos
+    2. 在ArceOS目录下，输入：
+
+        ```shell
+        make A=apps/boards/raspi4 ARCH=aarch64 PLATFORM=aarch64-raspi4 LOG=debug
+        ```
+        编译出ArceOS在raspi4上的.bin镜像。
+    3. 生成kernel8.img文件
+        ```shell
+        git clone https://github.com/chenlongos/rust-raspberrypi-OS-tutorials.git
+        # 在在06_uart_chainloader目录下，执行：
+        BSP=rpi4 make
+        ```
+        便可以看到生成了一个kernel8.img文件
+    4. 把 kernel8.img 和 raspi4_aarch64-raspi4.bin 通过 cat 命令拼接到一个 bin 文件中，仍然取名为 kernel8.img:
+        ```shell
+        # 在ArceOS目录下执行
+        cat ../rust-raspberrypi-OS-tutorials/06_uart_chainloader/kernel8.img apps/boards/raspi4/raspi4_aarch64-raspi4.bin > kernel8.img
+        ``` 
+    5. 已有树莓派开发板:把新生成的 kernel8.img 拷贝到 sd 卡上,替换原来的kernel8.img，上电启动。
+    6. 在qemu模拟器中运行:
+        ```shell
+        # 在qemu中运行kernel8.img
+        qemu-system-aarch64 -m 2G -smp 4 -cpu cortex-a72 -machine raspi4b -nographic -kernel arceos/kernel8.img
+        ```
+    GPIO在Arceos的点灯驱动可以参考: [https://github.com/happy-thw/arceos/commit/2f5aae5b1d74ac55cd3cee4f0e8240acb9c99618](https://github.com/happy-thw/arceos/commit/2f5aae5b1d74ac55cd3cee4f0e8240acb9c99618) ;  
+    更详细的信息参考: [ttps://chenlongos.com/raspi4-with-arceos-doc/chapter_1.1.html](https://chenlongos.com/raspi4-with-arceos-doc/chapter_1.1.html)
+    - 测试样例：  
+        1. 在R4L里面还是通过msicdev设备驱动操作gpio点灯，选取的Gpio Pin引脚随意，但是需要说明寄存器和引脚的关系，相关数据手册查看官网和网上资料
+        ``` sh
+        sudo echo 1 > /dev/rust_misc # 灯亮
+        sudo echo 0 > /dev/rust_misc # 灯灭
+        ```
+        2. 在Arceos里面通过shell里面新增cmd操作gpio点灯，达到循环亮灭的效果
+        3. Arceos和R4L中使用同一份Pure driver代码，只完成R4L部分获得该练习作业50%的分值。
