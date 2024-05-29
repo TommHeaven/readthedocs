@@ -285,7 +285,7 @@ sudo nmcli c down 'Wired connection 1' && sudo nmcli c up 'Wired connection 1'
     2. 在ArceOS目录下，输入：
 
         ```shell
-        make A=apps/boards/raspi4 ARCH=aarch64 PLATFORM=aarch64-raspi4 LOG=debug
+        make A=apps/cli ARCH=aarch64 PLATFORM=aarch64-raspi4 LOG=debug
         ```
         编译出ArceOS在raspi4上的.bin镜像。
     3. 生成kernel8.img文件
@@ -298,7 +298,7 @@ sudo nmcli c down 'Wired connection 1' && sudo nmcli c up 'Wired connection 1'
     4. 把 kernel8.img 和 raspi4_aarch64-raspi4.bin 通过 cat 命令拼接到一个 bin 文件中，仍然取名为 kernel8.img:
         ```shell
         # 在ArceOS目录下执行
-        cat ../rust-raspberrypi-OS-tutorials/06_uart_chainloader/kernel8.img apps/boards/raspi4/raspi4_aarch64-raspi4.bin > kernel8.img
+        cat ../rust-raspberrypi-OS-tutorials/06_uart_chainloader/kernel8.img apps/cli/cli_aarch64-raspi4.bin > kernel8.img
         ``` 
     5. 已有树莓派开发板:把新生成的 kernel8.img 拷贝到 sd 卡上,替换原来的kernel8.img，上电启动。
     6. 在qemu模拟器中运行:
